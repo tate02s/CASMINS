@@ -74,5 +74,5 @@ class SecurityData:
         # return model.predict(np.array([3.2]).reshape(-1, 1))
 
 
-securitiesData = SecurityData(['GRPN'], interestData, start, end)
+securitiesData = SecurityData(['WFC'], interestData, start, end)
 print(securitiesData.findCorr())
