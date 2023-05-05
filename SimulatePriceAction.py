@@ -21,7 +21,7 @@ R_squared = wfcCorrAndLastPrice[0]
 wfc_last_price = wfcCorrAndLastPrice[1]
 wfc_10yr_Tbond_cov = wfcCorrAndLastPrice[2]
 
-print(f'Covariance dict :{wfc_10yr_Tbond_cov}')
+print(f'Covariance dict :{wfc_10yr_Tbond_cov}') 
 
 #Set up the Vasicek model to simulate the interest rate for a given time interval.
 
@@ -41,10 +41,13 @@ t = np.arange(0,N)/252
 
 test_sim = VM.VasicekSim(N, r0, kappa, theta, sigma)
 
+print('HERE!!!')
 plt.figure(figsize=(10,5))
+plt.title("One Simulated 10 yr Treasury for 255 Days")
+plt.xlabel('Days')
+plt.ylabel('Interest rate')
 plt.plot(t,test_sim, color='r')
 plt.show()
-
 
 M = 1000
 
@@ -94,8 +97,8 @@ class SimSharePrice:
                 if i == 0:
                     simulatedStockPrice[i] = self.lastPrice + (self.lastPrice * self.corrCoeff) * (rateReturn * self.cov)
                 else:
-                    simulatedStockPrice[i] = simulatedStockPrice[i-1] + (self.lastPrice * self.corrCoeff) * (rateReturn * self.cov)
-
+                    simulatedStockPrice[i] = simulatedStockPrice[i-1] + (simulatedStockPrice[i-1] * self.corrCoeff) * (rateReturn * self.cov) 
+                    
             
             rateSimulation.append(simulatedStockPrice)
             expectedPrice.append(simulatedStockPrice[-1])
@@ -104,13 +107,16 @@ class SimSharePrice:
         expectedPrice = np.average(expectedPrice)
         print(f'Initial Price: {self.lastPrice}, Expected Price: {expectedPrice}')
 
-            
-
         plt.plot(rateSimulation)
+        plt.title('Simulated 10 Year Treasury Influence on WFC Share Price')
+        plt.xlabel('Simulated days from last true WFC price')
+        plt.ylabel('WFC Share Price')
+        plt.hlines(y=expectedPrice, xmin = -100, xmax=100, zorder=10, linestyles = 'dashed', label='Expected Price')
         plt.show()
 
         return rateSimulation
 
-
 WFC_Simulated = SimSharePrice(wfc_last_price, wfc_10yr_Tbond_cov['rates cov'][0], R_squared, SimulatedRates, simulatedRateReturns)
 WFC_Simulated.simulatePriceAction()
+
+print(wfc_10yr_Tbond_cov['rates cov'])
