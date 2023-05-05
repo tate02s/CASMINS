@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 class VasicekModel:
   def __init__(self, rates, days=252):
@@ -36,12 +35,23 @@ class VasicekModel:
   def VasicekCalibration(self, rates):
     n = len(rates)
     Ax = sum(rates[0:(n-1)])
+    
+    #Sum the lag rate values
     Ay = sum(rates[1:n])
+    #Perform matrix multiplcation on the rate scalars that exclude the last rate
     Axx = np.dot(rates[0:(n-1)], rates[0:(n-1)])
+    # Perform matrix multiplcation on the scalar that excludes the last rate
+    # and the rate scalar that excludes the first interest rate
     Axy = np.dot(rates[0:(n-1)], rates[1:n])
+    # Perform matrix multiplcation on the scalar rates that exclude the first rate
     Ayy = np.dot(rates[1:n], rates[1:n])
+
+    #Theta is the equilibrium yield
+    # lag summation * 
     theta = (Ay * Axx - Ax * Axy) / (n * (Axx - Axy) - (Ax**2 - Ax*Ay))
+    #Kappa is the the main variable 
     kappa = -np.log((Axy - theta * Ax - theta * Ay + n * theta**2) / (Axx - 2*theta*Ax + n*theta**2)) / self.dt
+    
     a = np.exp(-kappa * self.dt)
 
     print(f'mean reversion coefficient: {kappa}, equilibrium rate: {a}, theta: {theta}')
@@ -61,38 +71,3 @@ class VasicekModel:
       multiRateReturn.append(rateSimRound)
 
     return multiRateReturn
-  
-
-
-# rates_arr = VasicekMultiSim(M, N, r0, kappa, theta, sigma)
-# plt.figure(figsize=(10,5))
-# plt.plot(t,rates_arr)
-# plt.hlines(y=theta, xmin = -100, xmax=100, zorder=10, linestyles = 'dashed', label='Theta')
-# plt.annotate('Theta', xy=(1.0, theta+0.0005))
-# plt.xlim(-0.05, 1.05)
-# plt.ylabel("Rate")
-# plt.xlabel("Time (year)")
-# plt.title('Long run (mean reversion level) yield spread, theta = 0.0033%')
-# plt.show()
-
-# rates_arr = VasicekMultiSim(M, N, -0.01, kappa, theta, sigma)
-# plt.figure(figsize=(10,5))
-# plt.plot(t,rates_arr)
-# plt.hlines(y=theta, xmin = -100, xmax=100, zorder=10, linestyles = 'dashed', label='Theta')
-# plt.annotate('Theta', xy=(1.0, theta+0.0005))
-# plt.xlim(-0.05, 1.05)
-# plt.ylabel("Rate")
-# plt.xlabel("Time (year)")
-# plt.title('Last observed value, r0, is further away from theta')
-# plt.show()
-
-# rates_arr = VasicekMultiSim(M, N, -0.01, kappa*100, theta, sigma)
-# plt.figure(figsize=(10,5))
-# plt.plot(t,rates_arr)
-# plt.hlines(y=theta, xmin = -100, xmax=100, zorder=10, linestyles = 'dashed', label='Theta')
-# plt.annotate('Theta', xy=(1.0, theta+0.0005))
-# plt.xlim(-0.05, 1.05)
-# plt.ylabel("Rate")
-# plt.xlabel("Time (year)")
-# plt.title("Kappa (mean reversion speed) scaled up 10 times")
-# plt.show()
