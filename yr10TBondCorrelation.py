@@ -6,7 +6,15 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 from matplotlib import pyplot as plt
 
+start = '2020-01-01'
+end = '2022-01-01'
+
+interestData = pd.read_csv('DGS10.csv')
 RATE = 'DGS10'
+
+interestData = interestData[start <= interestData['DATE']]
+interestData = interestData[end >= interestData['DATE']]
+print(interestData)
 
 class SecurityData:
     def __init__(self, tickers, interestRates, start, end, period='1d'):
@@ -31,9 +39,6 @@ class SecurityData:
 
         pairs = [pair for pair in zip(mutualRates, mutualCloses)]
 
-        plt.scatter(x=[p[0] for p in pairs], y=[p[1] for p in pairs])
-        plt.show()
-
         #Find the covariance
         cov = self._findCOV(mutualRates, mutualCloses)
 
@@ -48,25 +53,38 @@ class SecurityData:
 
         return {'rates cov': cov[0], 'stock price cov': cov[1]}
 
-
     def _getMarketData(self):
         for ticker in self.tickers:
             pa = yf.Ticker(ticker).history(start=self.start, end=self.end, period=self.period)
             self.data.append(pa)
         
         return self.data
-
+    
     def findCorr(self):
         data = self._pairData()
         pairedData = data[0]
         lastPrice = data[1]
         cov = data[2]
 
+        #Prep the data for the Linear Regression model
         X, y = np.array([p[0] for p in pairedData]).reshape(-1, 1), [p[1] for p in pairedData]
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
+        #Train the Linear Regression model with the testing data
         model = LR()
         model.fit(X=X_train, y=y_train)
         y_pred = model.predict(X_test)
+
+        xValues = [v[0] for v in pairedData]
+        trendline = [float(model.coef_ * x + model.intercept_) for x in xValues]
+        print(f'Trendline points: {trendline}')
+
+        plt.scatter(x=[v[0] for v in pairedData], y=[v[1] for v in pairedData])
+        plt.scatter(x=xValues, y=trendline)
+        plt.title('Correlation Between 10 yr Treasury Yields and Wells Fargo Share Price')
+        plt.xlabel('10 yr Treasury yield (2020-2022)')
+        plt.ylabel('Wells Fargo Share Price')
+
+        plt.show()
 
         return (r2_score(y_test, y_pred), lastPrice, cov)
